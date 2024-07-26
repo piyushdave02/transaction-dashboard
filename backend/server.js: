@@ -1,0 +1,35 @@
+const express = require('express');
+const axios = require('axios');
+const mongoose = require('mongoose');
+const app = express();
+
+// MongoDB Schema
+const transactionSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  price: Number,
+  dateOfSale: Date,
+  category: String,
+  sold: Boolean
+});
+
+const Transaction = mongoose.model('Transaction', transactionSchema);
+
+// Initialize Database
+app.get('/initialize', async (req, res) => {
+  try {
+    const response = await axios.get('https://s3.amazonaws.com/roxiler.com/product_transaction.json');
+    const transactions = response.data;
+
+    await Transaction.deleteMany({}); // Clear existing data
+    await Transaction.insertMany(transactions);
+
+    res.status(200).json({ message: 'Database initialized successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error initializing database', error });
+  }
+});
+
+// Define other routes...
+
+app.listen(3000, () => console.log('Server running on port 3000'));
